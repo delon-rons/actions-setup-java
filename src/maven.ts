@@ -92,7 +92,11 @@ export async function setupMaven(opts: MavenOpts): Promise<void> {
     }
     certexists = await exec.exec(path.join(opts.javaPath, 'bin/keytool'), args);
   } catch (e) {
-    core.error(`keytool return an error: ${(e as Error).message}`);
+    core.info(
+      `keytool return an error: ${
+        (e as Error).message
+      } this is expected if the key is not in the keystore`
+    );
   }
 
   try {
