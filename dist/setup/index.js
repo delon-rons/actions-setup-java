@@ -11121,7 +11121,7 @@ function setupMaven(opts) {
             certexists = yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), args);
         }
         catch (e) {
-            core.error(`keytool return an error: ${e.message}`);
+            core.info(`keytool return an error: ${e.message} this is expected if the key is not in the keystore`);
         }
         try {
             if (certexists !== 0) {
