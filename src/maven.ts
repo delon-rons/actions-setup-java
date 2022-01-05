@@ -74,7 +74,7 @@ export async function setupMaven(opts: MavenOpts): Promise<void> {
   } else {
     params.push('-cacerts');
   }
-
+  var certexists = 0;
   try {
     const args = [
       '-list',
@@ -90,10 +90,12 @@ export async function setupMaven(opts: MavenOpts): Promise<void> {
     } else {
       args.push(`${opts.javaPath}/jre/lib/security/cacerts`);
     }
-    const certexists = await exec.exec(
-      path.join(opts.javaPath, 'bin/keytool'),
-      args
-    );
+    certexists = await exec.exec(path.join(opts.javaPath, 'bin/keytool'), args);
+  } catch (e) {
+    core.error(`keytool return an error: ${(e as Error).message}`);
+  }
+
+  try {
     if (certexists !== 0) {
       await exec.exec(
         path.join(opts.javaPath, 'bin/keytool'),
@@ -109,7 +111,7 @@ export async function setupMaven(opts: MavenOpts): Promise<void> {
       );
     }
   } catch (e) {
-    core.warning(`keytool return an error: ${(e as Error).message}`);
+    core.error(`keytool return an error: ${(e as Error).message}`);
   }
 
   core.debug(`added maven opts for MTLS access`);

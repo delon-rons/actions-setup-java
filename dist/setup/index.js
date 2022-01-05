@@ -11101,6 +11101,7 @@ function setupMaven(opts) {
         else {
             params.push('-cacerts');
         }
+        var certexists = 0;
         try {
             const args = [
                 '-list',
@@ -11109,7 +11110,7 @@ function setupMaven(opts) {
                 '-noprompt',
                 '-alias',
                 'mycert',
-                '-keystore',
+                '-keystore'
             ];
             if (parseInt(opts.javaVersion) >= 17) {
                 args.push(`${opts.javaPath}/lib/security/cacerts`);
@@ -11117,7 +11118,12 @@ function setupMaven(opts) {
             else {
                 args.push(`${opts.javaPath}/jre/lib/security/cacerts`);
             }
-            const certexists = yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), args);
+            certexists = yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), args);
+        }
+        catch (e) {
+            core.error(`keytool return an error: ${e.message}`);
+        }
+        try {
             if (certexists !== 0) {
                 yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), params.concat([
                     '-storepass',
@@ -11131,7 +11137,7 @@ function setupMaven(opts) {
             }
         }
         catch (e) {
-            core.warning(`keytool return an error: ${e.message}`);
+            core.error(`keytool return an error: ${e.message}`);
         }
         core.debug(`added maven opts for MTLS access`);
     });
