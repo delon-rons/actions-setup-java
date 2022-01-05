@@ -11102,7 +11102,7 @@ function setupMaven(opts) {
             params.push('-cacerts');
         }
         try {
-            const certexists = yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), [
+            const args = [
                 '-list',
                 '-storepass',
                 'changeit',
@@ -11110,8 +11110,14 @@ function setupMaven(opts) {
                 '-alias',
                 'mycert',
                 '-keystore',
-                `${opts.javaPath}/jre/lib/security/cacerts`
-            ]);
+            ];
+            if (parseInt(opts.javaVersion) >= 17) {
+                args.push(`${opts.javaPath}/lib/security/cacerts`);
+            }
+            else {
+                args.push(`${opts.javaPath}/jre/lib/security/cacerts`);
+            }
+            const certexists = yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), args);
             if (certexists !== 0) {
                 yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), params.concat([
                     '-storepass',
