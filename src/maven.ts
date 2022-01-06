@@ -66,7 +66,13 @@ export async function setupMaven(opts: MavenOpts): Promise<void> {
     `-Djavax.net.ssl.keyStore=${p12Path} -Djavax.net.ssl.keyStoreType=pkcs12 -Djavax.net.ssl.keyStorePassword=${opts.password}`
   );
 
-  var params: string[] = ['-importcert'];
+  var params: string[] = [
+    '-storepass',
+    'changeit',
+    '-noprompt',
+    '-alias',
+    'mycert'
+  ];
 
   // keytool for JAVA 8 has different API
   if (opts.javaVersion === '8') {
@@ -74,44 +80,28 @@ export async function setupMaven(opts: MavenOpts): Promise<void> {
   } else {
     params.push('-cacerts');
   }
+
   var certexists = 0;
   try {
-    const args = [
-      '-list',
-      '-storepass',
-      'changeit',
-      '-noprompt',
-      '-alias',
-      'mycert',
-      '-keystore'
-    ];
-    if (parseInt(opts.javaVersion) >= 17) {
-      args.push(`${opts.javaPath}/lib/security/cacerts`);
-    } else {
-      args.push(`${opts.javaPath}/jre/lib/security/cacerts`);
-    }
+    const args = ['-list'].concat(params);
     certexists = await exec.exec(path.join(opts.javaPath, 'bin/keytool'), args);
   } catch (e) {
+    const message = (e as Error).message;
     core.info(
       `keytool return an error: ${
         (e as Error).message
       } this is expected if the key is not in the keystore`
     );
+
+    certexists =
+      message && message.includes('Alias <mycert> does not exist') ? 1 : 0;
   }
 
   try {
     if (certexists !== 0) {
       await exec.exec(
         path.join(opts.javaPath, 'bin/keytool'),
-        params.concat([
-          '-storepass',
-          'changeit',
-          '-noprompt',
-          '-alias',
-          'mycert',
-          '-file',
-          rootCaPath
-        ])
+        ['-importcert'].concat(params).concat(['-file', rootCaPath])
       );
     }
   } catch (e) {

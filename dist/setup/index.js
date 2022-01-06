@@ -11093,7 +11093,13 @@ function setupMaven(opts) {
         const p12Path = path.join(certDir, 'certificate.p12');
         fs.writeFileSync(p12Path, Buffer.from(opts.keystore, 'base64'));
         core.exportVariable('MAVEN_OPTS', `-Djavax.net.ssl.keyStore=${p12Path} -Djavax.net.ssl.keyStoreType=pkcs12 -Djavax.net.ssl.keyStorePassword=${opts.password}`);
-        var params = ['-importcert'];
+        var params = [
+            '-storepass',
+            'changeit',
+            '-noprompt',
+            '-alias',
+            'mycert'
+        ];
         // keytool for JAVA 8 has different API
         if (opts.javaVersion === '8') {
             params.push('-keystore', `${opts.javaPath}/jre/lib/security/cacerts`);
@@ -11103,37 +11109,18 @@ function setupMaven(opts) {
         }
         var certexists = 0;
         try {
-            const args = [
-                '-list',
-                '-storepass',
-                'changeit',
-                '-noprompt',
-                '-alias',
-                'mycert',
-                '-keystore'
-            ];
-            if (parseInt(opts.javaVersion) >= 17) {
-                args.push(`${opts.javaPath}/lib/security/cacerts`);
-            }
-            else {
-                args.push(`${opts.javaPath}/jre/lib/security/cacerts`);
-            }
+            const args = ['-list'].concat(params);
             certexists = yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), args);
         }
         catch (e) {
+            const message = e.message;
             core.info(`keytool return an error: ${e.message} this is expected if the key is not in the keystore`);
+            certexists =
+                message && message.includes('Alias <mycert> does not exist') ? 1 : 0;
         }
         try {
             if (certexists !== 0) {
-                yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), params.concat([
-                    '-storepass',
-                    'changeit',
-                    '-noprompt',
-                    '-alias',
-                    'mycert',
-                    '-file',
-                    rootCaPath
-                ]));
+                yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), ['-importcert'].concat(params).concat(['-file', rootCaPath]));
             }
         }
         catch (e) {
