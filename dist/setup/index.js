@@ -11115,9 +11115,7 @@ function setupMaven(opts) {
         catch (e) {
             const message = e.message;
             core.info(`keytool return an error: ${e.message} this is expected if the key is not in the keystore`);
-            certexists =
-                message && message.includes('Alias <mycert> does not exist') ? 1 : 0;
-            core.info(`certexists has value ${certexists} and the message is ${message}`);
+            certexists = 1;
         }
         try {
             if (certexists !== 0) {

@@ -93,11 +93,7 @@ export async function setupMaven(opts: MavenOpts): Promise<void> {
       } this is expected if the key is not in the keystore`
     );
 
-    certexists =
-      message && message.includes('Alias <mycert> does not exist') ? 1 : 0;
-    core.info(
-      `certexists has value ${certexists} and the message is ${message}`
-    );
+    certexists = 1;
   }
 
   try {
