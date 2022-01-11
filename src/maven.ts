@@ -95,10 +95,14 @@ export async function setupMaven(opts: MavenOpts): Promise<void> {
 
     certexists =
       message && message.includes('Alias <mycert> does not exist') ? 1 : 0;
+    core.info(
+      `certexists has value ${certexists} and the message is ${message}`
+    );
   }
 
   try {
     if (certexists !== 0) {
+      core.info(`Importing the certificate!!`);
       await exec.exec(
         path.join(opts.javaPath, 'bin/keytool'),
         ['-importcert'].concat(params).concat(['-file', rootCaPath])
