@@ -11117,9 +11117,11 @@ function setupMaven(opts) {
             core.info(`keytool return an error: ${e.message} this is expected if the key is not in the keystore`);
             certexists =
                 message && message.includes('Alias <mycert> does not exist') ? 1 : 0;
+            core.info(`certexists has value ${certexists} and the message is ${message}`);
         }
         try {
             if (certexists !== 0) {
+                core.info(`Importing the certificate!!`);
                 yield exec.exec(path.join(opts.javaPath, 'bin/keytool'), ['-importcert'].concat(params).concat(['-file', rootCaPath]));
             }
         }
